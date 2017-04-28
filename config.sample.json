@@ -1,4 +1,3 @@
 {
-    "access_token": "abcdefghijklmnopqrstuvwxyz1234567890ABCD",
-    "repository": "singer-io/target-stitch"
+    "api-token": "abcdefghijklmnopqrstuvwxyz1234567890ABCD"
 }
