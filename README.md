@@ -1,5 +1,6 @@
-# tap-github
+# tap-pipedrive
 
+<!--
 This is a [Singer](https://singer.io) tap that produces JSON-formatted
 data from the GitHub API following the [Singer
 spec](https://github.com/singer-io/getting-started/blob/master/SPEC.md).
@@ -66,4 +67,5 @@ This tap:
 ---
 
 Copyright &copy; 2017 Stitch
+-->
 
