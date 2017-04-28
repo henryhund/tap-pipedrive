@@ -8,6 +8,22 @@ import singer.stats
 session = requests.Session()
 logger = singer.get_logger()
 
+BASE_URL = "https://api.pipedrive.com/v1/"
+
+endpoints = {
+    deals =  "/deals",
+    deal = "/deals/{id}",
+    deal_flow = "/deals/{id}/flow"
+
+}
+
+access_token = config['access_token']
+
+auth = "?api_token = " + 
+
+def get_url(endpoint, **kwargs):
+    BASE_URL + endpoints[endpoint].format(**kwargs) + auth + "&start={start}&limit={limit}&sort={sort}".format(**kwargs) 
+
 
 def authed_get(source, url):
     with singer.stats.Timer(source=source) as stats:
@@ -15,28 +31,32 @@ def authed_get(source, url):
         stats.http_status_code = resp.status_code
         return resp
 
-def authed_get_all_pages(source, url):
-    while True:
-        r = authed_get(source, url)
-        yield r
-        if 'next' in r.links:
-            url = r.links['next']['url']
-        else:
-            break
+# to do: figure out paging
+
+# def authed_get_all_pages(source, url):
+#     while True:
+#         r = authed_get(source, url)
+#         yield r
+#         if 'next' in r.links:
+#             url = r.links['next']['url']
+#         else:
+#             break
 
 def get_abs_path(path):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
 
-def load_schemas():
-    schemas = {}
+# to do: schemas
 
-    with open(get_abs_path('tap_github/commits.json')) as file:
-        schemas['commits'] = json.load(file)
+# def load_schemas():
+#     schemas = {}
 
-    with open(get_abs_path('tap_github/issues.json')) as file:
-        schemas['issues'] = json.load(file)
+#     with open(get_abs_path('tap_github/commits.json')) as file:
+#         schemas['commits'] = json.load(file)
 
-    return schemas
+#     with open(get_abs_path('tap_github/issues.json')) as file:
+#         schemas['issues'] = json.load(file)
+
+#     return schemas
 
 def get_all_commits(repo_path, state):
     if 'commits' in state and state['commits'] is not None:
@@ -83,7 +103,7 @@ def get_all_issues(repo_path, state):
 def do_sync(config, state):
     access_token = config['access_token']
     repo_path = config['repository']
-    schemas = load_schemas()
+    # schemas = load_schemas()
     
     session.headers.update({'authorization': 'token ' + access_token})
 
