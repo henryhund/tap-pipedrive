@@ -1,5 +1,15 @@
 # tap-pipedrive
 
+This is a [Singer](https://singer.io) tap that produces JSON-formatted
+data from the Pipedrive API following the [Singer
+spec](https://github.com/singer-io/getting-started/blob/master/SPEC.md).
+
+This tap currently only pulls dealChanges from the `/deals/{id}/flow` api endpoint. This allows analysts to create historical analyses on Pipedrive deals.
+
+To run:
+
+`python3 tap_pipedrive.py -c config.json | target-stitch -c config-stitch.json`
+
 <!--
 This is a [Singer](https://singer.io) tap that produces JSON-formatted
 data from the GitHub API following the [Singer
