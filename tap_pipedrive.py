@@ -8,22 +8,6 @@ import os
 session = requests.Session()
 logger = singer.get_logger()
 
-parser = argparse.ArgumentParser()
-
-parser.add_argument(
-    '-c', '--config', help='Config file', required=True)
-
-args = parser.parse_args()
-
-with open(args.config) as config_file:
-    config = json.load(config_file)
-
-api_token = config['api-token']
-
-auth = "?api_token=" + api_token
-
-
-
 def authed_get(source, url):
     # with singer.stats.Timer(source=source) as stats:
     resp = session.request(method='get', url=url)
@@ -55,7 +39,7 @@ def load_schemas():
 
     return schemas
 
-def get_all_deals(state):
+def get_all_deals(state, config):
     # figure out updated_at
     if 'deals' in state and state['deals'] is not None:
         query_string = '&sort=update_time%20DESC&limit=500'
@@ -65,6 +49,7 @@ def get_all_deals(state):
     latest_deal_time = None
 
     # with singer.stats.Counter(source='deals') as stats:
+    auth = "?api_token=" + config['api-token']
     url = 'https://api.pipedrive.com/v1/deals{}{}'.format(auth, query_string)
     deal_count = 0
     for response in authed_get_all_pages('deals', url ):
@@ -112,7 +97,7 @@ def do_sync(config, state):
         
     # singer.write_schema('commits', schemas['commits'], 'sha')
     # singer.write_schema('issues', schemas['issues'], 'id')
-    state = get_all_deals(state)
+    state = get_all_deals(state, config)
     # state = get_all_issues(repo_path, state)
     singer.write_state(state)
 
@@ -135,6 +120,9 @@ def main():
     for key in ['api-token']:
         if key not in config:
             missing_keys += [key]
+
+    api_token = config['api-token']
+    auth = "?api_token=" + api_token
 
     if len(missing_keys) > 0:
         logger.fatal("Missing required configuration keys: {}".format(missing_keys))
