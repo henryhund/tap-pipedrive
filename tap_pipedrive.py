@@ -3,6 +3,7 @@ import requests
 import singer
 import json
 import os
+import datetime
 # import singer.stats
 
 session = requests.Session()
@@ -31,11 +32,11 @@ def get_abs_path(path):
 def load_schemas():
     schemas = {}
 
-    with open(get_abs_path('tap_github/commits.json')) as file:
-        schemas['commits'] = json.load(file)
+    with open(get_abs_path('tap_pipedrive/deal_changes.json')) as file:
+        schemas['deal_changes'] = json.load(file)
 
-    with open(get_abs_path('tap_github/issues.json')) as file:
-        schemas['issues'] = json.load(file)
+    # with open(get_abs_path('tap_github/issues.json')) as file:
+    #     schemas['issues'] = json.load(file)
 
     return schemas
 
@@ -60,14 +61,17 @@ def get_all_deals(state, config):
 
             for deal in deals:
                 # stats.add(record_count=1)
-                if deal.get('update_time') >= state.get('deals'):
-                    one_deal_url = 'https://api.pipedrive.com/v1/deals/{}/flow{}'.format(deal['id'],auth)
-                    for one_deal_response in authed_get_all_pages('deal_flow', one_deal_url):
-                        one_deal = one_deal_response.json()['data']
-                        singer.write_records('deal_flow', one_deal)
+                # if state.get('deals') is not None and datetime.datetime.strptime(deal.get('update_time'),'%Y-%m-%d %H:%M:%S') >= state.get('deals'):
+                
+                one_deal_url = 'https://api.pipedrive.com/v1/deals/{}/flow{}'.format(deal['id'],auth)
+                for one_deal_response in authed_get_all_pages('deal_changes', one_deal_url):
+                    
+                    for one_deal in one_deal_response.json()['data']:
+                        if one_deal['object'] == 'dealChange':
+                            singer.write_record('deal_changes', one_deal)
 
-                    # deal_id = str(deal.pop('id', None))
-                    # deal_count = deal_count + 1
+                        # deal_id = str(deal.pop('id', None))
+                        # deal_count = deal_count + 1
 
                     
                     
@@ -79,13 +83,13 @@ def get_all_deals(state, config):
             if not latest_deal_time:
                 latest_deal_time = deals[0]['update_time']
 
-    state['deal'] = latest_deal_time
+    state['deal_changes'] = latest_deal_time
     return state
 
 def do_sync(config, state):
     # access_token = config['access_token']
     # repo_path = config['repository']
-    # schemas = load_schemas()
+    schemas = load_schemas()
     
     # session.headers.update({'authorization': 'token ' + access_token})
 
@@ -95,7 +99,7 @@ def do_sync(config, state):
         logger.info('Replicating deals ')
 
         
-    # singer.write_schema('commits', schemas['commits'], 'sha')
+    singer.write_schema('deal_changes', schemas['deal_changes'], 'sha')
     # singer.write_schema('issues', schemas['issues'], 'id')
     state = get_all_deals(state, config)
     # state = get_all_issues(repo_path, state)

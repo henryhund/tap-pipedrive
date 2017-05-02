@@ -1,0 +1,7 @@
+{"type": "object",
+"properties": {
+  "timestamp": {"type": "string"},
+  "object": {"type": "string"},
+  "item_id": {"type": "integer"},
+  "data": {"type": "object"}
+}}
