@@ -56,10 +56,11 @@ def load_schemas():
     return schemas
 
 def get_all_deals(state):
+    # figure out updated_at
     if 'deals' in state and state['deals'] is not None:
-        query_string = '&sort=id%20DESC&limit=500'
+        query_string = '&sort=update_time%20DESC&limit=500'
     else:
-        query_string = '&sort=id%20DESC&limit=500'
+        query_string = '&sort=update_time%20DESC&limit=500'
 
     latest_deal_time = None
 
@@ -70,15 +71,20 @@ def get_all_deals(state):
             deals = response.json()['data']
             # logger.info('URL: %s ', url)
             # logger.info('Deals: %s ', deals)
-            
+        
+
             for deal in deals:
                 # stats.add(record_count=1)
-                
-                deal_id = str(deal.pop('id', None))
-                deal_count = deal_count + 1
-                # if deal.get('update_time') >= state.get('deals'):
+                if deal.get('update_time') >= state.get('deals'):
+                    one_deal_url = 'https://api.pipedrive.com/v1/deals/{}/flow{}'.format(deal['id'],auth)
+                    for one_deal_response in authed_get_all_pages('deal_flow', one_deal_url):
+                        one_deal = one_deal_response.json()['data']
+                        singer.write_records('deal_flow', one_deal)
+
+                    # deal_id = str(deal.pop('id', None))
+                    # deal_count = deal_count + 1
+
                     
-                singer.write_record('deals', deal)
                     
 
                 # elif state['deals'] is None:
@@ -87,7 +93,6 @@ def get_all_deals(state):
                 #     break
             if not latest_deal_time:
                 latest_deal_time = deals[0]['update_time']
-    logger.info(deal_count)
 
     state['deal'] = latest_deal_time
     return state
