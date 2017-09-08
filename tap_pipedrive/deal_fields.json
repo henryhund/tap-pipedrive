@@ -1,0 +1,20 @@
+{"type": "object",
+"properties": {
+  "id": {"type": "integer"},
+  "key": {"type": ["null","string"]},
+  "name": {"type": ["null","string"]},
+  "add_time": {"type": ["null","string"]},
+  "update_time": {"type": ["null","string"]},
+  "active_flag": {"type": ["null","boolean"]},
+  "options": {
+    "type": [
+      "null", 
+      "array"
+    ],
+    "properties" : {
+        "id": {"type": "string" },
+        "label": {"type": "string"}
+     }
+    }
+  }
+}

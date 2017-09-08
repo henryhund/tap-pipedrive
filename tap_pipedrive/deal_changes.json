@@ -3,5 +3,11 @@
   "timestamp": {"type": "string"},
   "object": {"type": "string"},
   "item_id": {"type": "integer"},
-  "data": {"type": "object"}
+  "data": {"type": "object",
+    "properties": {
+      "id": {"type": "integer"}
+      
+    }
+
+  }
 }}

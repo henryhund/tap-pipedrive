@@ -34,15 +34,37 @@ def load_schemas():
 
     with open(get_abs_path('tap_pipedrive/deal_changes.json')) as file:
         schemas['deal_changes'] = json.load(file)
+    with open(get_abs_path('tap_pipedrive/deal_fields.json')) as file:
+        schemas['deal_fields'] = json.load(file)
 
     # with open(get_abs_path('tap_github/issues.json')) as file:
     #     schemas['issues'] = json.load(file)
 
     return schemas
 
+def get_all_fields(state, config):
+    query_string = '&sort=update_time%20DESC'
+    latest_field_time = None
+   
+    auth = "?api_token=" + config['api-token']
+    url = 'https://api.pipedrive.com/v1/dealFields{}{}'.format(auth, query_string)
+    field_count = 0
+    for response in authed_get_all_pages('deal_fields', url ):
+            fields = response.json()['data']
+
+            for field in fields:
+                if field['id'] is not None:
+                    singer.write_record('deal_fields', field)
+
+    if not latest_field_time:
+        latest_field_time = fields[-1]['update_time']
+
+    state['deal_fields'] = latest_field_time
+    return state
+
 def get_all_deals(state, config):
     # figure out updated_at
-    if 'deals' in state and state['deals'] is not None:
+    if 'deal_changes' in state and state['deal_changes'] is not None:
         query_string = '&sort=update_time%20DESC&limit=500'
     else:
         query_string = '&sort=update_time%20DESC&limit=500'
@@ -68,6 +90,7 @@ def get_all_deals(state, config):
                     
                     for one_deal in one_deal_response.json()['data']:
                         if one_deal['object'] == 'dealChange':
+                            one_deal['id'] = one_deal['data'].pop('id')
                             singer.write_record('deal_changes', one_deal)
 
                         # deal_id = str(deal.pop('id', None))
@@ -99,9 +122,16 @@ def do_sync(config, state):
         logger.info('Replicating deals ')
 
         
-    singer.write_schema('deal_changes', schemas['deal_changes'], 'sha')
+    
+    singer.write_schema('deal_changes', schemas['deal_changes'], 'id')
+    singer.write_schema('deal_fields', schemas['deal_fields'], 'id')
+    
     # singer.write_schema('issues', schemas['issues'], 'id')
+    
+
+
     state = get_all_deals(state, config)
+    state = get_all_fields(state, config)
     # state = get_all_issues(repo_path, state)
     singer.write_state(state)
 
